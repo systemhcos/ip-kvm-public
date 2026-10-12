@@ -1,0 +1,38 @@
+auto lo
+iface lo inet loopback
+
+# Physical interfaces
+auto enp24s0f0
+iface enp24s0f0 inet manual
+
+auto enp24s0f1
+iface enp24s0f1 inet manual
+
+# Bonding layer (Proxmox standard style)
+auto bond0
+iface bond0 inet manual
+    bond-slaves enp24s0f0 enp24s0f1
+    bond-miimon 100
+    bond-mode 802.3ad
+    bond-xmit-hash-policy layer3+4
+    mtu 1500
+
+# Main Proxmox Bridge (Carries primary IP, gateway, and secondary public IPs)
+auto vmbr0
+iface vmbr0 inet static
+    address 195.189.97.43/26
+    gateway 195.189.97.1
+    bridge-ports bond0
+    bridge-stp off
+    bridge-fd 0
+    dns-nameservers 10.100.0.53 10.100.0.54
+    dns-search localdomain
+    up ip addr add 84.32.52.83/32 dev vmbr0
+    up ip addr add 84.32.52.84/32 dev vmbr0
+    up ip addr add 84.32.52.85/32 dev vmbr0
+    up ip addr add 84.32.52.86/32 dev vmbr0
+
+# VLAN Subinterface on the bridge
+auto vmbr0.3150
+iface vmbr0.3150 inet static
+    address 10.197.171.11/24
